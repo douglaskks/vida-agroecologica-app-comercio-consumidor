@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:vidaagroconsumidor/shared/core/repositories/sign_in_repository.dart';
 
+enum ForgotPasswordStatus {
+  idle,
+  loading,
+  done,
+  error,
+}
+
 class ForgotPasswordController with ChangeNotifier {
   final SignInRepository _repository = SignInRepository();
   String? errorMessage;
@@ -16,27 +23,30 @@ class ForgotPasswordController with ChangeNotifier {
 
       status = ForgotPasswordStatus.loading;
       notifyListeners();
-
-      bool emailExists =
-          await _repository.checkEmailExists(emailController.text);
-      if (!emailExists) {
-        throw Exception("O email fornecido não está registrado.");
-      }
-
+      
+      print('Iniciando processo de recuperação de senha para: ${emailController.text}');
+      
+      // Vamos tentar enviar o email diretamente, sem verificação prévia
+      // Isso simula o comportamento do app ASSIM que está funcionando
       await _repository.sendResetPasswordEmail(emailController.text);
 
+      print('Email de recuperação enviado com sucesso');
+      
       if (!emailController.hasListeners) return;
       status = ForgotPasswordStatus.done;
       notifyListeners();
-      setErrorMessage("Email de redefinição de senha enviado com sucesso.");
     } catch (e) {
+      print('Erro no controller ao enviar email de recuperação: $e');
+      
       if (!emailController.hasListeners) return;
-      status = ForgotPasswordStatus.idle;
+      status = ForgotPasswordStatus.error;
       notifyListeners();
-      setErrorMessage(e is Exception
-          ? e.toString().replaceAll('Exception: ', '')
-          : 'Falha ao enviar email de redefinição de senha. Tente novamente mais tarde.');
-      // ignore: use_rethrow_when_possible
+      
+      String errorMsg = e is Exception
+        ? e.toString().replaceAll('Exception: ', '')
+        : 'Falha ao enviar email de redefinição de senha. Tente novamente mais tarde.';
+      
+      setErrorMessage(errorMsg);
       throw e;
     }
   }
@@ -44,9 +54,12 @@ class ForgotPasswordController with ChangeNotifier {
   void setErrorMessage(String value) async {
     errorMessage = value;
     notifyListeners();
-    await Future.delayed(const Duration(seconds: 2));
+    
+    await Future.delayed(const Duration(seconds: 3));
+    
     if (!emailController.hasListeners) return;
     errorMessage = null;
+    status = ForgotPasswordStatus.idle;
     notifyListeners();
   }
 
@@ -55,11 +68,4 @@ class ForgotPasswordController with ChangeNotifier {
     emailController.dispose();
     super.dispose();
   }
-}
-
-enum ForgotPasswordStatus {
-  idle,
-  loading,
-  done,
-  error,
 }
