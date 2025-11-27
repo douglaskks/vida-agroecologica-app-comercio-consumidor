@@ -17,6 +17,8 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     UserStorage userStorage = UserStorage();
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.height < 700;
 
     return Scaffold(
       appBar: const CustomAppBar(),
@@ -30,31 +32,38 @@ class ProfileScreen extends StatelessWidget {
             Container(
               color: kDetailColor,
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(isSmallScreen ? 12.0 : 16.0),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.account_circle,
-                      size: 60,
+                      size: isSmallScreen ? 50 : 60,
                       color: Colors.white,
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: isSmallScreen ? 12 : 16),
                     FutureBuilder<String>(
                       future: userStorage.getUserName(),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
-                          return const Text('Carregando...',
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 18));
+                          return Text(
+                            'Carregando...',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: isSmallScreen ? 16 : 18,
+                            ),
+                          );
                         } else if (snapshot.hasError ||
                             !snapshot.hasData ||
                             snapshot.data!.isEmpty) {
-                          return const Text('Convidado',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w500));
+                          return Text(
+                            'Convidado',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: isSmallScreen ? 18 : 20,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          );
                         } else {
                           String nameToShow =
                               snapshot.data!.split(' ').take(3).join(' ');
@@ -62,16 +71,22 @@ class ProfileScreen extends StatelessWidget {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(nameToShow,
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w500)),
+                                Flexible(
+                                  child: Text(
+                                    nameToShow,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: isSmallScreen ? 18 : 20,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
                                 IconButton(
-                                  icon: const Icon(
+                                  icon: Icon(
                                     Icons.edit,
                                     color: Colors.white,
-                                    size: 20,
+                                    size: isSmallScreen ? 18 : 20,
                                   ),
                                   onPressed: () {
                                     Navigator.pushNamed(
@@ -107,7 +122,11 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(left: 8, right: 8, bottom: 20),
+              padding: EdgeInsets.only(
+                left: size.width * 0.02,
+                right: size.width * 0.02,
+                bottom: isSmallScreen ? 12 : 20,
+              ),
               child: PrimaryButton(
                 text: 'Sair da conta',
                 onPressed: () {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vidaagroconsumidor/screens/screens_index.dart';
+import 'package:vidaagroconsumidor/screens/signin/components/sign_in_result.dart';
 import 'sign_in_repository.dart';
 
 enum SignInStatus {
@@ -42,7 +43,7 @@ class SignInController with ChangeNotifier {
   void setErrorMessage(String value) async {
     errorMessage = value;
     notifyListeners();
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 3));
     errorMessage = null;
     notifyListeners();
   }
@@ -52,27 +53,47 @@ class SignInController with ChangeNotifier {
       status = SignInStatus.loading;
       notifyListeners();
 
-      int result = (await _repository.signIn(
+      final result = await _repository.signIn(
         email: _emailController.text,
         password: _passwordController.text,
-      )) as int;
+      );
 
-      if (result == 1) {
-        await saveEmail(_emailController.text);
-        status = SignInStatus.done;
-        Navigator.pushReplacementNamed(context, Screens.home);
-      } else if (result == 3) {
-        status = SignInStatus.error;
-        setErrorMessage('Você não tem permissão para acessar este aplicativo.');
-      } else {
-        status = SignInStatus.error;
-        setErrorMessage('Email ou senha incorretos.');
+      switch (result.type) {
+        case SignInResultType.success:
+          await saveEmail(_emailController.text);
+          status = SignInStatus.done;
+          notifyListeners();
+          Navigator.pushReplacementNamed(context, Screens.home);
+          break;
+
+        case SignInResultType.unauthorized:
+          status = SignInStatus.error;
+          setErrorMessage('Este aplicativo é exclusivo para consumidores.');
+          notifyListeners();
+          break;
+
+        case SignInResultType.invalidCredentials:
+          status = SignInStatus.error;
+          setErrorMessage('E-mail ou senha incorretos.');
+          notifyListeners();
+          break;
+
+        case SignInResultType.serverError:
+          status = SignInStatus.error;
+          setErrorMessage(result.message != null ? result.message! : 'Servidor indisponível. Tente novamente mais tarde.');
+          notifyListeners();
+          break;
+
+        case SignInResultType.networkError:
+          status = SignInStatus.error;
+          setErrorMessage(result.message != null ? result.message! : 'Verifique sua conexão com a internet.');
+          notifyListeners();
+          break;
       }
-
     } catch (e) {
       status = SignInStatus.error;
-      setErrorMessage('Erro ao realizar login. Tente novamente.');
+      setErrorMessage('Ocorreu um erro inesperado. Tente novamente.');
+      notifyListeners();
     }
-    notifyListeners();
   }
 }

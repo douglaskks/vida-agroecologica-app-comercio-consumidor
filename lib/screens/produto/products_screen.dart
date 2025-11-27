@@ -49,9 +49,9 @@ class _MenuProductsScreenState extends State<MenuProductsScreen> {
     final Map<String, dynamic> arguments =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>;
     final int bancaId = arguments['id'];
-    final String bancaNome = arguments['nome'];
-    final String horarioAbertura = arguments['horario_abertura'];
-    final String horarioFechamento = arguments['horario_fechamento'];
+    final String bancaNome = arguments['nome'] ?? 'Banca';
+    final String horarioAbertura = arguments['horario_abertura'] ?? '00:00:00';
+    final String horarioFechamento = arguments['horario_fechamento'] ?? '23:59:59'; 
 
     String formatarHorario(String horario) {
       List<String> partes = horario.split(':');

@@ -1,26 +1,28 @@
 class BancaModel {
   int id;
   String nome;
-  String? descricao; // Make nullable if the description can be absent
-  String horarioAbertura;
-  String horarioFechamento;
+  String? descricao;
+  String? horarioAbertura; // ← Agora nullable
+  String? horarioFechamento; // ← Agora nullable
   bool entrega;
   double precoMinimo;
   int feiraId;
   int agricultorId;
-  String? pix; // Adding PIX as it is present in your JSON
+  String? pix;
+  Map<String, dynamic>? horariosFuncionamento; // ← Adicionar o campo real da API
 
   BancaModel({
     required this.id,
     required this.nome,
     this.descricao,
-    required this.horarioAbertura,
-    required this.horarioFechamento,
+    this.horarioAbertura,
+    this.horarioFechamento,
     required this.entrega,
     required this.precoMinimo,
     required this.feiraId,
     required this.agricultorId,
     this.pix,
+    this.horariosFuncionamento,
   });
 
   factory BancaModel.fromJson(Map<String, dynamic> json) {
@@ -28,13 +30,16 @@ class BancaModel {
       id: json['id'] as int,
       nome: json['nome'] as String,
       descricao: json['descricao'] as String?,
-      horarioAbertura: json['horario_abertura'] as String,
-      horarioFechamento: json['horario_fechamento'] as String,
-      entrega: json['entrega'] as bool,
-      precoMinimo: double.parse(json['preco_minimo'] as String),
+      horarioAbertura: json['horario_abertura'] as String?, // ← Nullable
+      horarioFechamento: json['horario_fechamento'] as String?, // ← Nullable
+      entrega: json['entrega'] as bool? ?? false, // ← Valor padrão
+      precoMinimo: json['preco_minimo'] != null 
+          ? double.parse(json['preco_minimo'].toString()) 
+          : 0.0, // ← Proteção
       feiraId: json['feira_id'] as int,
       agricultorId: json['agricultor_id'] as int,
       pix: json['pix'] as String?,
+      horariosFuncionamento: json['horarios_funcionamento'] as Map<String, dynamic>?,
     );
   }
 
@@ -50,6 +55,7 @@ class BancaModel {
     data['feira_id'] = feiraId;
     data['agricultor_id'] = agricultorId;
     data['pix'] = pix;
+    data['horarios_funcionamento'] = horariosFuncionamento;
     return data;
   }
 }

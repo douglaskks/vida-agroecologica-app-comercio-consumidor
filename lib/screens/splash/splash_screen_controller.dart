@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:math';
+import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:vidaagroconsumidor/shared/constants/app_text_constants.dart';
 import 'package:vidaagroconsumidor/shared/core/models/table_products_model.dart';
@@ -15,8 +15,7 @@ class SplashScreenController {
   final BuildContext context;
   bool isFirstTime = false;
   SplashScreenController(this.context);
-  final Logger _logger =
-      Logger('Splash screen logger');
+  final Logger _logger = Logger('Splash screen logger');
   final userStorage = UserStorage();
 
   void initApplication(Function onComplete) async {
@@ -36,7 +35,6 @@ class SplashScreenController {
     if (await userStorage.userHasCredentials()) {
       navigatorKey.currentState!.popAndPushNamed(Screens.first);
     } else {
-      // ignore: use_build_context_synchronously
       navigatorKey.currentState!.popAndPushNamed(Screens.signin);
     }
   }
@@ -46,12 +44,12 @@ class SplashScreenController {
     final email = prefs.getString('email');
     final token = prefs.getString('token');
     if (token != null) {
-      log('user has token' as num);
-      log(email! as num);
-      log(token as num);
+      log('user has token');
+      log(email ?? 'no email');
+      log(token);
       return true;
     } else {
-      log('user has no token' as num);
+      log('user has no token');
       return false;
     }
   }
@@ -61,25 +59,37 @@ class SplashScreenController {
     UserStorage userStorage = UserStorage();
     List<TableProductsModel> products = [];
 
-    var userToken = await userStorage.getUserToken();
+    try {
+      var userToken = await userStorage.getUserToken();
 
-    var response = await dio.get('$kBaseURL/produtos/tabelados',
+      var response = await dio.get(
+        '$kBaseURL/produtos/tabelados',
         options: Options(
           headers: {
             "Content-Type": "application/json",
             "Accept": "application/json",
             "Authorization": "Bearer $userToken"
           },
-        ));
+        ),
+      );
 
-    List<dynamic> responseData = response.data['produtos'];
-    for (int i = 0; i < responseData.length; i++) {
-      var product = TableProductsModel.fromJson(responseData[i]);
-      products.add(product);
+      List<dynamic> responseData = response.data['produtos'];
+      for (int i = 0; i < responseData.length; i++) {
+        var product = TableProductsModel.fromJson(responseData[i]);
+        products.add(product);
+      }
+      
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      List<String> listProducts =
+          products.map((product) => json.encode(product.toJson())).toList();
+      prefs.setStringList('listaProdutosTabelados', listProducts);
+      
+    } on DioError catch (e) {
+      log('Erro na requisição: ${e.response?.statusCode}');
+      log('Mensagem: ${e.message}');
+      // Não quebra o app, apenas loga o erro
+    } catch (e) {
+      log('Erro inesperado ao buscar produtos: $e');
     }
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String> listProducts =
-        products.map((product) => json.encode(product.toJson())).toList();
-    prefs.setStringList('listaProdutosTabelados', listProducts);
   }
 }

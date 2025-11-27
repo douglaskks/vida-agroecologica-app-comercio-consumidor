@@ -43,7 +43,7 @@ class SignInScreen extends StatelessWidget with ValidationMixin {
                  decoration: const BoxDecoration(
                    color: Colors.white,
                    borderRadius: BorderRadius.only(
-                     topLeft: Radius.circular(35), 
+                     topLeft: Radius.circular(35),
                      topRight: Radius.circular(35),
                    )
                  ),
